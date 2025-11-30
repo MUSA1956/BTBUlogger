@@ -15,7 +15,7 @@ import requests
 
 def check_load_config():
     #文件配置
-    print(os.path.exists(r".\Profile"))
+    # print(os.path.exists(r".\Profile"))
     if os.path.exists(r".\Profile"):
         pass
     else:
@@ -146,6 +146,12 @@ def command_input():
         command=commands[0]
         if command == "open":
             open_site(commands[1])
+        elif command == "help":
+            help_inf=("open <site> #site:bb",
+                      "help #get help",
+                      "exit #end program")
+            for i in help_inf:
+                print(i)
 
         elif command == "exit":
             Driver.quit()
