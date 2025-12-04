@@ -8,13 +8,14 @@ import configparser
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 import http.client
+import ddddocr
 import webbrowser
 import requests
 import datetime
 
-def normal_input(content):
+def normal_input(hint):
     now = datetime.datetime.now()
-    s=input("[{}:{}:{} {}:{}:{}.{}]   {}".format(now.year,now.month,now.day,now.hour,now.minute,now.second,str(now.microsecond)[:2],content))
+    s=input("[{}:{}:{} {}:{}:{}.{}]   {}".format(now.year,now.month,now.day,now.hour,now.minute,now.second,str(now.microsecond)[:2],hint))
     return s
 
 def normal_print(content:str):
@@ -134,16 +135,38 @@ def site_account_setup():
     site_dic={"bb":{"site":"https://bb.btbu.edu.cn/",
                     "account":config["accounts"]["BTBUaccount"],
                     "password":config["accounts"]["BTBUaccount"],
-                    "instructions":(("find_element","css selector","#user_id"),
-                                    ("send","account"),
-                                    ("find_element","css selector","#password"),
-                                    ("send","password"),
+                    "instructions":(
+                                    ["find_element","css selector","#user_id"],
+                                    ["send","account"],
+                                    ["find_element","css selector","#password"],
+                                    ["send","password"],
                                     # ("find_element","css selector","#login"),
                                     # ("submit")
-                                    ("send","Keys.RETURN"))},
+                                    ["send","Keys.RETURN"]
+                                    )
+                    },
               "jwgl":{"site":"https://jwgl.btbu.edu.cn/",
                       "account":config["accounts"]["BTBUaccount"],
-                      "password":config["accounts"]["BTBUpassword"]}}
+                      "password":config["accounts"]["BTBUpassword"],
+                      "instructions":(["find_element","css selector","#userAccount"],
+                                      ["send","account"],
+                                      ["find_element", "css selector","#userPassword"],
+                                      ["send","password"],
+                                      ["find_element","css selector","#SafeCodeImg"],
+                                      ["screenshot"],
+                                      ["ddddocr"],
+                                      ["find_element","css selector","#RANDOMCODE"],
+                                      ["send","key"],
+                                      ["find_element","css selector","#btn-login"],
+                                      ["click"]
+                                      )
+                      },
+              "cnki":{"site":"https://cnki.net/",
+                      "account":"none",
+                      "password":"none",
+                      "instructions":()
+                      }
+              }
     return site_dic
 
 def open_site(site_name:str):
@@ -154,6 +177,7 @@ def open_site(site_name:str):
     Driver.switch_to.new_window("tab")
     Driver.get(site_dic[site_name]["site"])
     for i in site_dic[site_name]["instructions"]:
+        # print(i[0])
         time.sleep(0.5)
         if i[0] == "find_element":
             element=Driver.find_element(i[1],i[2])
@@ -164,6 +188,15 @@ def open_site(site_name:str):
             element.click()
         elif i[0]=="submit":
             element.submit()
+        elif i[0]=="screenshot":
+            status=element.screenshot(r"img.png")
+            # time.sleep(0.5)
+            # print(status)
+        elif i[0] == "ddddocr":
+            ocr = ddddocr.DdddOcr(beta=True,show_ad=False)
+            with open("img.png","rb") as f:
+                img=f.read()
+            key=ocr.classification(img)
 
 
 
@@ -179,7 +212,7 @@ def command_input():
             if command == "open":
                 open_site(commands[1])
             elif command == "help":
-                help_inf=("open <site> #site:bb",
+                help_inf=("open <site> #site:bb,cnki,jwgl",
                           "help #get help",
                           "exit #end program")
                 for i in help_inf:
